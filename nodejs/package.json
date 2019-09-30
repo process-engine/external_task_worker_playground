@@ -1,0 +1,37 @@
+{
+  "name": "external_task_worker_playground",
+  "version": "1.0.0",
+  "description": "Some sample implementation for the ExternalTaskWorker. Don't expect anything actually usable, this is used only for debugging and testing purposes.",
+  "main": "dist/commonjs/index.js",
+  "repository": {
+    "type": "git",
+    "url": ":"
+  },
+  "author": "5Minds IT Solutions GmbH & Co KG",
+  "license": "MIT",
+  "dependencies": {
+    "@essential-projects/http": "^2.4.0",
+    "@process-engine/external_task_api_client": "^2.0.0",
+    "loggerhythm": "^3.0.4",
+    "moment": "^2.24.0"
+  },
+  "devDependencies": {
+    "@essential-projects/eslint-config": "^1.0.0",
+    "@process-engine/consumer_api_contracts": "^9.0.0",
+    "@types/node": "^10.12.2",
+    "eslint": "^5.16.0",
+    "tsconfig": "^7.0.0",
+    "typescript": "^3.3.3"
+  },
+  "scripts": {
+    "start": "node dist/commonjs/index.js",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && npm run build-commonjs && npm run build-amd",
+    "build-commonjs": "tsc",
+    "build-amd": "tsc --module amd --outDir ./dist/amd",
+    "prepare": "npm run build",
+    "lint": "eslint  src/*.ts",
+    "lint-fix": "eslint --fix  src/*.ts",
+    "test": ":"
+  }
+}
