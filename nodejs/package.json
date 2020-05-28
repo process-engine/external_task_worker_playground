@@ -11,7 +11,9 @@
   "license": "MIT",
   "dependencies": {
     "@essential-projects/http": "^2.5.0",
-    "@process-engine/consumer_api_client": "^6.4.0",
+    "@process-engine/consumer_api_client": "feature~fix_using_internal_identity",
+    "@process-engine/iam": "1.7.4",
+    "jsonwebtoken": "^8.5.1",
     "loggerhythm": "^3.0.4",
     "moment": "^2.24.0"
   },
