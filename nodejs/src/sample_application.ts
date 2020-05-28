@@ -15,13 +15,16 @@ const pollingTimeout = 1000;
 type SuccessResult = DataModels.ExternalTask.ExternalTaskSuccessResult<object>;
 type ExternalTask = DataModels.ExternalTask.ExternalTask<any>;
 
+const workers: Array<ExternalTaskWorker<object, object>> = [];
+
 export async function subscribeToExternalTasks(): Promise<void> {
 
-  const identity = await AuthTokenProvider.getInitialIdentity();
+  const identity = await AuthTokenProvider.getIdentity();
+  startRefreshIdentityInterval();
 
   logger.info('Erstelle 32 Worker');
 
-  for (let i = 0; i < 31; i++) {
+  for (let i = 0; i < 32; i++) {
 
     const topic = `randomTopic${i}`;
     logger.info(`Starte Worker für topic ${topic}`);
@@ -34,6 +37,7 @@ export async function subscribeToExternalTasks(): Promise<void> {
     const externalTaskWorker = createExternalTaskWorker(processEngineUrl, topic, callback, identity);
 
     externalTaskWorker.start();
+    workers.push();
   }
 }
 
@@ -47,4 +51,13 @@ function createExternalTaskWorker(
   const externalTaskWorker = new ExternalTaskWorker<object, object>(url, identity, topic, maxTaskToPoll, pollingTimeout, callback);
 
   return externalTaskWorker;
+}
+
+function startRefreshIdentityInterval(): void {
+  setInterval(async (): Promise<void> => {
+    logger.info('Refreshing identity');
+    const newIdentity = await AuthTokenProvider.getIdentity();
+
+    workers.forEach((worker) => { worker.identity = newIdentity; });
+  }, 30000);
 }
