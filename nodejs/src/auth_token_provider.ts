@@ -5,9 +5,14 @@ import {HttpClient} from '@essential-projects/http';
 import {IIdentity} from '@essential-projects/iam_contracts';
 import {IdentityService} from '@process-engine/iam';
 
-const httpClientForAuthority = new HttpClient();
+const logger = Logger.createLogger('external_task_worker_playground:auth_token_provider');
+
+const httpClient = new HttpClient();
+const identityService = new IdentityService();
+
 const authurityUrl = 'http://localhost:5000';
 const loginEndpoint = 'connect/token';
+
 const loginRequestBody = {
   client_id: 'bpmn_studio',
   client_secret: 'secret',
@@ -15,19 +20,16 @@ const loginRequestBody = {
   scope: 'test_resource',
   grant_type: 'client_credentials',
 };
+
 const loginRequestHeaders = {
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded',
   },
 };
 
-const identityService = new IdentityService();
-
-const logger = Logger.createLogger('external_task_worker_playground:auth_token_provider');
-
 export async function getIdentity(): Promise<IIdentity> {
 
-  if (!checkIsIdentityServerAvailable()) {
+  if (!checkIfIdentityServerIsAvailable()) {
     logger.warn('Identity Server is currently not available. Returning default auth token');
 
     return {
@@ -38,7 +40,7 @@ export async function getIdentity(): Promise<IIdentity> {
   }
 
   try {
-    const response = await httpClientForAuthority.post<object, any>(`${authurityUrl}/${loginEndpoint}`, loginRequestBody, loginRequestHeaders);
+    const response = await httpClient.post<object, any>(`${authurityUrl}/${loginEndpoint}`, loginRequestBody, loginRequestHeaders);
 
     const token = response.result.access_token;
 
@@ -51,9 +53,9 @@ export async function getIdentity(): Promise<IIdentity> {
   }
 }
 
-function checkIsIdentityServerAvailable(): boolean {
+function checkIfIdentityServerIsAvailable(): boolean {
   try {
-    httpClientForAuthority.get(authurityUrl);
+    httpClient.get(authurityUrl);
 
     return true;
   } catch (error) {

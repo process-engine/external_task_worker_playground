@@ -6,21 +6,21 @@ import {DataModels, HandleExternalTaskAction} from '@process-engine/consumer_api
 
 import * as AuthTokenProvider from './auth_token_provider';
 
+type SuccessResult = DataModels.ExternalTask.ExternalTaskSuccessResult<object>;
+type ExternalTask = DataModels.ExternalTask.ExternalTask<any>;
+
 const logger = Logger.createLogger('external_task_worker_playground');
 
 const processEngineUrl = 'http://localhost:8000';
 const maxTaskToPoll = 5;
 const pollingTimeout = 1000;
 
-type SuccessResult = DataModels.ExternalTask.ExternalTaskSuccessResult<object>;
-type ExternalTask = DataModels.ExternalTask.ExternalTask<any>;
-
 const workers: Array<ExternalTaskWorker<object, object>> = [];
 
 export async function subscribeToExternalTasks(): Promise<void> {
 
   const identity = await AuthTokenProvider.getIdentity();
-  startRefreshIdentityInterval();
+  startRefreshingIdentity();
 
   logger.info('Erstelle 32 Worker');
 
@@ -53,11 +53,13 @@ function createExternalTaskWorker(
   return externalTaskWorker;
 }
 
-function startRefreshIdentityInterval(): void {
+function startRefreshingIdentity(): void {
+
   setInterval(async (): Promise<void> => {
     logger.info('Refreshing identity');
     const newIdentity = await AuthTokenProvider.getIdentity();
 
     workers.forEach((worker) => { worker.identity = newIdentity; });
   }, 30000);
+
 }
