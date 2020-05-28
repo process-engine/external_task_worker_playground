@@ -29,7 +29,8 @@ const loginRequestHeaders = {
 
 export async function getIdentity(): Promise<IIdentity> {
 
-  if (!checkIfIdentityServerIsAvailable()) {
+  const identityServerUnavailable = !(await checkIfIdentityServerIsAvailable());
+  if (identityServerUnavailable) {
     logger.warn('Identity Server is currently not available. Returning default auth token');
 
     return {
@@ -53,9 +54,9 @@ export async function getIdentity(): Promise<IIdentity> {
   }
 }
 
-function checkIfIdentityServerIsAvailable(): boolean {
+async function checkIfIdentityServerIsAvailable(): Promise<boolean> {
   try {
-    httpClient.get(authurityUrl);
+    await httpClient.get(authurityUrl);
 
     return true;
   } catch (error) {
