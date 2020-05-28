@@ -9,10 +9,11 @@ const httpClientForAuthority = new HttpClient();
 const authurityUrl = 'http://localhost:5000';
 const loginEndpoint = 'connect/token';
 const loginRequestBody = {
-  grant_type: 'client_credentials',
-  scope: 'something',
-  client_id: 'BPMN Studio',
+  client_id: 'bpmn_studio',
   client_secret: 'secret',
+  response_type: ['id_token', 'token'],
+  scope: 'test_resource',
+  grant_type: 'client_credentials',
 };
 const loginRequestHeaders = {
   headers: {
@@ -24,7 +25,7 @@ const identityService = new IdentityService();
 
 const logger = Logger.createLogger('external_task_worker_playground:auth_token_provider');
 
-export async function getInitialIdentity(): Promise<IIdentity> {
+export async function getIdentity(): Promise<IIdentity> {
 
   if (!checkIsIdentityServerAvailable()) {
     logger.warn('Identity Server is currently not available. Returning default auth token');
@@ -36,13 +37,18 @@ export async function getInitialIdentity(): Promise<IIdentity> {
     };
   }
 
-  const response = await httpClientForAuthority.post<object, any>(`${authurityUrl}/${loginEndpoint}`, loginRequestBody, loginRequestHeaders);
+  try {
+    const response = await httpClientForAuthority.post<object, any>(`${authurityUrl}/${loginEndpoint}`, loginRequestBody, loginRequestHeaders);
 
-  const token = response.result.access_token;
+    const token = response.result.access_token;
 
-  const identity = await identityService.getIdentity(token);
+    const identity = await identityService.getIdentity(token);
 
-  return identity;
+    return identity;
+  } catch (error) {
+    logger.error('Failed to login at IdentityServer!', error.message);
+    throw error;
+  }
 }
 
 function checkIsIdentityServerAvailable(): boolean {
