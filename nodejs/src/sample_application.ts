@@ -4,22 +4,20 @@ import {IIdentity} from '@essential-projects/iam_contracts';
 import {ExternalTaskWorker} from '@process-engine/consumer_api_client';
 import {DataModels, HandleExternalTaskAction} from '@process-engine/consumer_api_contracts';
 
+import * as AuthTokenProvider from './auth_token_provider';
+
 const logger = Logger.createLogger('external_task_worker_playground');
 
 const processEngineUrl = 'http://localhost:8000';
 const maxTaskToPoll = 5;
 const pollingTimeout = 1000;
 
-const identity: IIdentity = {
-  // eslint-disable-next-line max-len
-  token: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjdmNTI3YmM1YjUyZTlmMDM5OGIzZTRkYzE4NmI2ZWE2IiwidHlwIjoiSldUIn0.eyJuYmYiOjE1NjIwNTE4NzksImV4cCI6MTU2MjA1NTQ3OSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6NTAwMC9yZXNvdXJjZXMiLCJ0ZXN0X3Jlc291cmNlIl0sImNsaWVudF9pZCI6ImJwbW5fc3R1ZGlvIiwic3ViIjoiOThhNDQzNmYtOTk4ZC00YWZhLTkzYWItZTUzYTlhMTA1NTNhIiwiYXV0aF90aW1lIjoxNTYyMDUxODc5LCJpZHAiOiJsb2NhbCIsIkRlZmF1bHRfVGVzdF9MYW5lIjoiMTIzIiwiTGFuZUEiOiJ0cnVlIiwiTGFuZUIiOiJ0cnVlIiwiTGFuZUMiOiJ0cnVlIiwiY2FuX3JlYWRfcHJvY2Vzc19tb2RlbCI6InRydWUiLCJjYW5fd3JpdGVfcHJvY2Vzc19tb2RlbCI6InRydWUiLCJjYW5fY3JlYXRlX2xvY2FsX2FkbWluIjoidHJ1ZSIsIkFnZW50IjoidHJ1ZSIsIm5hbWUiOiJhbGljZSIsInNjb3BlIjpbIm9wZW5pZCIsInByb2ZpbGUiLCJ0ZXN0X3Jlc291cmNlIl0sImFtciI6WyJwd2QiXX0.AroGYUY-kCP3NVfn2-TxwvVvEMN4B97ZxeqR7hse7J-9jatdN1NsmS3Tj_GD7pluBFJmq0sZSHWRL1qk356eTNzgpZCoBCLcgBwoL2s3eFAWrr5V_K4x2PSdbpyFf1_ffdg25_c1WikaPLJElmKTcNoH8M1Bn3bVw4bAt7mOz_9IhGUN5FNjMj4kIEOpY9aN-GHCzhrCwRtj-AwOuEn1Gp9dkmTYwlTALH9-rMCa8SyI5RNL47LaY9cBLp9EBXOfSlDcqe2gxVPC_3EKtbX1sSUf4x9gU0hQlXcQ6TTzFmuyBRtA8IkZXykZq1BNCC2CgurXBoajVh90qPuezKasKA',
-  userId: 'alice',
-};
-
 type SuccessResult = DataModels.ExternalTask.ExternalTaskSuccessResult<object>;
 type ExternalTask = DataModels.ExternalTask.ExternalTask<any>;
 
 export async function subscribeToExternalTasks(): Promise<void> {
+
+  const identity = await AuthTokenProvider.getInitialIdentity();
 
   logger.info('Erstelle 32 Worker');
 
@@ -33,7 +31,7 @@ export async function subscribeToExternalTasks(): Promise<void> {
       return new DataModels.ExternalTask.ExternalTaskSuccessResult(externalTask.id, {bla: 'blubb'});
     };
 
-    const externalTaskWorker = createExternalTaskWorker(processEngineUrl, topic, callback);
+    const externalTaskWorker = createExternalTaskWorker(processEngineUrl, topic, callback, identity);
 
     externalTaskWorker.start();
   }
@@ -43,6 +41,7 @@ function createExternalTaskWorker(
   url: string,
   topic: string,
   callback: HandleExternalTaskAction<object, object>,
+  identity: IIdentity,
 ): ExternalTaskWorker<object, object> {
 
   const externalTaskWorker = new ExternalTaskWorker<object, object>(url, identity, topic, maxTaskToPoll, pollingTimeout, callback);
