@@ -37,7 +37,7 @@ export async function subscribeToExternalTasks(): Promise<void> {
     const externalTaskWorker = createExternalTaskWorker(processEngineUrl, topic, callback, identity);
 
     externalTaskWorker.start();
-    workers.push();
+    workers.push(externalTaskWorker);
   }
 }
 
